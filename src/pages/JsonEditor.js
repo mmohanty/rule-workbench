@@ -15,11 +15,11 @@ const JsonEditor = () => {
   useEffect(() => {
     // Static data for initial rendering, replace this with an API call later
     const staticData = [
-      { key: "Name", value: "John Doe" },
-      { key: "Email", value: "john.doe@example.com" },
-      { key: "Phone", value: "123-456-7890" }
+      { field_name: "Name", prompt: "Enter your full name" },
+      { field_name: "Email", prompt: "Enter your email address" },
+      { field_name: "Phone", prompt: "Enter your phone number" }
     ];
-    setKeyValuePairs(staticData);
+    setKeyValuePairs(staticData.map(item => ({ key: item.field_name, value: item.prompt })));
   }, []);
 
   const handleAddPair = () => {
