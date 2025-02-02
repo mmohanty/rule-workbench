@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
+import axios from "axios";
 import { useParams } from "react-router-dom";
-import { Container, TextField, Button, Typography, Box, IconButton, Accordion, AccordionSummary, AccordionDetails, Modal, Paper } from "@mui/material";
+import { Container, TextField, Button, Typography, Box, IconButton, Accordion, AccordionSummary, AccordionDetails, Dialog, DialogTitle, DialogContent, DialogActions, Paper } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -10,16 +11,16 @@ const JsonEditor = () => {
   const [keyValuePairs, setKeyValuePairs] = useState([]);
   const [jsonOutput, setJsonOutput] = useState(null);
   const [filterKey, setFilterKey] = useState("");
-  const [openModal, setOpenModal] = useState(false);
+  const [openDialog, setOpenDialog] = useState(false);
 
   useEffect(() => {
-    // Static data for initial rendering, replace this with an API call later
-    const staticData = [
-      { field_name: "Name", prompt: "Enter your full name" },
-      { field_name: "Email", prompt: "Enter your email address" },
-      { field_name: "Phone", prompt: "Enter your phone number" }
-    ];
-    setKeyValuePairs(staticData.map(item => ({ key: item.field_name, value: item.prompt })));
+    axios.get("https://api.example.com/data")
+      .then(response => {
+        setKeyValuePairs(response.data.map(item => ({ key: item.field_name, value: item.prompt })));
+      })
+      .catch(error => {
+        console.error("Error fetching data:", error);
+      });
   }, []);
 
   const handleAddPair = () => {
@@ -42,7 +43,7 @@ const JsonEditor = () => {
       .filter(pair => pair.key)
       .map(pair => ({ field_name: pair.key, field_value: pair.value }));
     setJsonOutput(JSON.stringify(jsonObject, null, 2));
-    setOpenModal(true);
+    setOpenDialog(true);
   };
 
   const handleSubmit = () => {
@@ -105,14 +106,17 @@ const JsonEditor = () => {
           Submit
         </Button>
       </Box>
-      <Modal open={openModal} onClose={() => setOpenModal(false)}>
-        <Paper sx={{ p: 4, maxWidth: "80%", margin: "auto", mt: 10 }}>
-          <Typography variant="h6">Generated JSON</Typography>
-          <Typography variant="body1" component="pre" sx={{ fontSize: "1.2rem", mt: 2 }}>
+      <Dialog open={openDialog} onClose={() => setOpenDialog(false)} fullWidth maxWidth="sm">
+        <DialogTitle>Generated JSON</DialogTitle>
+        <DialogContent>
+          <Typography variant="body1" component="pre" sx={{ fontSize: "1.2rem", maxHeight: "400px", overflowY: "auto" }}>
             {jsonOutput}
           </Typography>
-        </Paper>
-      </Modal>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenDialog(false)} color="primary">Close</Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 };
