@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 import { useParams } from "react-router-dom";
 import { Container, TextField, Button, Typography, Box, IconButton, Accordion, AccordionSummary, AccordionDetails, Dialog, DialogTitle, DialogContent, DialogActions, Paper } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
@@ -9,35 +8,29 @@ import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 
 const JsonEditor = () => {
   const { param } = useParams();
-  const [keyValuePairs, setKeyValuePairs] = useState([]);
+  const [keyValuePairs, setKeyValuePairs] = useState([
+    { key: "Name", value: "Enter your full name" },
+    { key: "Email", value: "Enter your email address" },
+    { key: "Phone", value: "Enter your phone number" }
+  ]);
   const [jsonOutput, setJsonOutput] = useState(null);
   const [filterKey, setFilterKey] = useState("");
   const [openDialog, setOpenDialog] = useState(false);
-
-  useEffect(() => {
-    axios.get("https://api.example.com/data")
-      .then(response => {
-        setKeyValuePairs(response.data.map(item => ({ key: item.field_name, value: item.prompt })));
-      })
-      .catch(error => {
-        console.error("Error fetching data:", error);
-      });
-  }, []);
 
   const handleAddPair = () => {
     setKeyValuePairs([...keyValuePairs, { key: "", value: "" }]);
   };
 
   const handleRemovePair = (index) => {
-    const updatedPairs = keyValuePairs.filter((_, i) => i !== index);
-    setKeyValuePairs(updatedPairs);
+    setKeyValuePairs(prevPairs => prevPairs.filter((_, i) => i !== index));
   };
 
   const handleChange = (index, field, value) => {
-    const updatedPairs = keyValuePairs.map((pair, i) => 
-      i === index ? { ...pair, [field]: value } : pair
+    setKeyValuePairs(prevPairs =>
+      prevPairs.map((pair, i) =>
+        i === index ? { ...pair, [field]: value } : pair
+      )
     );
-    setKeyValuePairs(updatedPairs);
   };
 
   const generateJson = () => {
@@ -71,38 +64,36 @@ const JsonEditor = () => {
         onChange={(e) => setFilterKey(e.target.value)}
         sx={{ mb: 2 }}
       />
-      {keyValuePairs
-        .filter(pair => pair.key.toLowerCase().includes(filterKey.toLowerCase()))
-        .map((pair, index) => (
-          <Accordion key={index} sx={{ width: "100%" }}>
-            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-              <Typography sx={{ flexGrow: 1 }}>{pair.key || "New Key"}</Typography>
-              <IconButton onClick={() => handleRemovePair(index)} color="error">
-                <DeleteIcon />
-              </IconButton>
-            </AccordionSummary>
-            <AccordionDetails>
-              <TextField
-                label="Key"
-                variant="outlined"
-                value={pair.key}
-                onChange={(e) => handleChange(index, "key", e.target.value)}
-                fullWidth
-                sx={{ fontSize: "1.2rem", mb: 2 }}
-              />
-              <TextField
-                label="Value"
-                variant="outlined"
-                multiline
-                minRows={4}
-                value={pair.value}
-                onChange={(e) => handleChange(index, "value", e.target.value)}
-                fullWidth
-                sx={{ fontSize: "1.2rem" }}
-              />
-            </AccordionDetails>
-          </Accordion>
-        ))}
+      {keyValuePairs.map((pair, index) => (
+        <Accordion key={index} sx={{ width: "100%" }} hidden={filterKey && !pair.key.toLowerCase().includes(filterKey.toLowerCase())}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography sx={{ flexGrow: 1 }}>{pair.key || "New Key"}</Typography>
+            <IconButton onClick={() => handleRemovePair(index)} color="error">
+              <DeleteIcon />
+            </IconButton>
+          </AccordionSummary>
+          <AccordionDetails>
+            <TextField
+              label="Key"
+              variant="outlined"
+              value={pair.key}
+              onChange={(e) => handleChange(index, "key", e.target.value)}
+              fullWidth
+              sx={{ fontSize: "1.2rem", mb: 2 }}
+            />
+            <TextField
+              label="Value"
+              variant="outlined"
+              multiline
+              minRows={4}
+              value={pair.value}
+              onChange={(e) => handleChange(index, "value", e.target.value)}
+              fullWidth
+              sx={{ fontSize: "1.2rem" }}
+            />
+          </AccordionDetails>
+        </Accordion>
+      ))}
       <Button startIcon={<AddIcon />} onClick={handleAddPair} variant="contained" color="primary" sx={{ fontSize: "1.2rem", padding: "10px 20px", mt: 3 }}>
         Add Key
       </Button>
