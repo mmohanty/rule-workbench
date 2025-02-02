@@ -5,6 +5,7 @@ import { Container, TextField, Button, Typography, Box, IconButton, Accordion, A
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 
 const JsonEditor = () => {
   const { param } = useParams();
@@ -44,6 +45,12 @@ const JsonEditor = () => {
       .map(pair => ({ field_name: pair.key, field_value: pair.value }));
     setJsonOutput(JSON.stringify(jsonObject, null, 2));
     setOpenDialog(true);
+  };
+
+  const handleCopyToClipboard = () => {
+    navigator.clipboard.writeText(jsonOutput).then(() => {
+      alert("Copied to clipboard!");
+    }).catch(err => console.error("Error copying to clipboard:", err));
   };
 
   const handleSubmit = () => {
@@ -114,6 +121,7 @@ const JsonEditor = () => {
           </Typography>
         </DialogContent>
         <DialogActions>
+          <Button onClick={handleCopyToClipboard} startIcon={<ContentCopyIcon />} color="primary">Copy</Button>
           <Button onClick={() => setOpenDialog(false)} color="primary">Close</Button>
         </DialogActions>
       </Dialog>
