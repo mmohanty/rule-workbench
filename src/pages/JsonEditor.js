@@ -34,8 +34,9 @@ const JsonEditor = () => {
   };
 
   const handleChange = (index, field, value) => {
-    const updatedPairs = [...keyValuePairs];
-    updatedPairs[index][field] = value;
+    const updatedPairs = keyValuePairs.map((pair, i) => 
+      i === index ? { ...pair, [field]: value } : pair
+    );
     setKeyValuePairs(updatedPairs);
   };
 
