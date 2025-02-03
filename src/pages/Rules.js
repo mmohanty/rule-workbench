@@ -131,6 +131,7 @@ function SortableContainer({ id, items, onEdit, onRemove, isPool }) {
 
 
 
+
 function Rules() {
   const [containers, setContainers] = useState(initialContainers);
   const [nextId, setNextId] = useState(6);
@@ -233,38 +234,39 @@ function Rules() {
       return;
     }
   
+    const activeContainer = findContainer(active.id);
     const overContainer = findContainer(over.id) || over.id;
-    if (!overContainer || !Object.keys(containers).includes(overContainer)) {
+  
+    if (!activeContainer || !overContainer) {
       setActiveItem(null);
       return;
     }
   
-    const activeItem = initialPool.find((item) => item.id === active.id);
-    if (activeItem) {
-      if (activeItem.requiresInput) {
-        setPendingDrop({ item: activeItem, overContainer });
+    if (activeContainer === overContainer) {
+      // Reorder within the same drop container
+      const updatedItems = [...containers[activeContainer]];
+      const oldIndex = updatedItems.findIndex((item) => item.id === active.id);
+      const newIndex = updatedItems.findIndex((item) => item.id === over.id);
   
-        // Initialize form data with empty fields
-        const inputData = {};
-        activeItem.inputs.forEach((inputField) => {
-          inputData[inputField] = "";
-        });
-  
-        setFormData({ id: activeItem.id, label: activeItem.label, inputs: activeItem.inputs, ...inputData });
-        setOpen(true); // Open modal for user-input items
-      } else {
-        // Directly drop the item without opening modal
-        const newItem = { id: `copy-${nextId}`, label: activeItem.label };
-        setNextId((prev) => prev + 1);
+      if (oldIndex !== newIndex) {
         setContainers((prev) => ({
           ...prev,
-          [overContainer]: [...prev[overContainer], newItem],
+          [activeContainer]: arrayMove(updatedItems, oldIndex, newIndex),
         }));
       }
+    } else {
+      // Moving between different containers
+      const activeItem = containers[activeContainer].find((item) => item.id === active.id);
+      setContainers((prev) => ({
+        ...prev,
+        [activeContainer]: prev[activeContainer].filter((item) => item.id !== active.id),
+        [overContainer]: [...prev[overContainer], activeItem],
+      }));
     }
   
     setActiveItem(null);
   };
+  
   
   
   const handleEditItem = (item) => {
