@@ -12,60 +12,103 @@ import {
   MenuItem,
   InputLabel,
   FormControl,
+  TextField,
 } from "@mui/material";
-import { Add, Delete } from "@mui/icons-material";
+import { Add, Delete, UploadFile } from "@mui/icons-material";
 import { DataGrid, GridToolbarContainer, GridToolbar } from "@mui/x-data-grid";
 
-const CustomGridToolbar = ({ addCondition }) => (
-  <GridToolbarContainer sx={{ display: 'flex', justifyContent: 'space-between' }}>
-    <GridToolbar />
-    <IconButton onClick={addCondition} color="primary">
-      <Add />
-    </IconButton>
-  </GridToolbarContainer>
-);
+const CustomGridToolbar = ({ addCondition, handleImport }) => (
+    <GridToolbarContainer sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+      <input
+        accept="application/json"
+        style={{ display: 'none' }}
+        id="import-json"
+        type="file"
+        onChange={handleImport}
+      />
+      <label htmlFor="import-json">
+        <IconButton color="primary" component="span">
+          <UploadFile />
+        </IconButton>
+      </label>
+      <IconButton onClick={addCondition} color="primary">
+        <Add />
+      </IconButton>
+    </GridToolbarContainer>
+  );
+  
+  
 
 const RuleMapping = () => {
-  const [rules, setRules] = useState({});
+  const [rules, setRules] = useState({
+    "RULE1": [
+      { id: "1", name: "Key1", value: "Value1" },
+      { id: "2", name: "Key2", value: "Value2" }
+    ],
+    "RULE2": [
+      { id: "3", name: "Key3", value: "Value3" }
+    ]
+  });
   const [selectedRule, setSelectedRule] = useState("");
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [rowData, setRowData] = useState([]);
 
   useEffect(() => {
-    setRules({ "RULE1": { "Key1": "Value1" }, "RULE2": { "Key2": "Value2" } });
-  }, []);
+    if (selectedRule && rules[selectedRule]) {
+      setRowData([...rules[selectedRule]]);
+    } else {
+      setRowData([]);
+    }
+  }, [selectedRule, rules]);
+
+  const handleImport = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const importedData = JSON.parse(e.target.result);
+          setRules(importedData);
+        } catch (error) {
+          console.error("Invalid JSON file");
+        }
+      };
+      reader.readAsText(file);
+    }
+  };
 
   const addCondition = () => {
     if (!selectedRule) return;
+    
+    const newId = (rowData.length + 1 + Math.max(...rowData.map(c => parseInt(c.id, 10) || 0), 0)).toString();
+    const newCondition = { id: newId, name: `KEY${newId}`, value: "" };
 
     setRules((prevRules) => {
       const updatedRules = { ...prevRules };
-      if (!updatedRules[selectedRule]) updatedRules[selectedRule] = {};
-      
-      const newCondition = `NEW_CONDITION_${Object.keys(updatedRules[selectedRule]).length + 1}`;
-      updatedRules[selectedRule][newCondition] = "";
+      updatedRules[selectedRule] = [...updatedRules[selectedRule], newCondition];
       return updatedRules;
     });
   };
 
   const deleteCondition = (conditionId) => {
     if (!selectedRule) return;
+    
     setRules((prevRules) => {
       const updatedRules = { ...prevRules };
-      delete updatedRules[selectedRule][conditionId];
+      updatedRules[selectedRule] = updatedRules[selectedRule].filter((condition) => condition.id !== conditionId);
       return updatedRules;
     });
   };
 
-  const handleEditCellChange = (params) => {
+  const onCellEditCommit = (params) => {
     const { id, field, value } = params;
+    if (!selectedRule) return;
+    
     setRules((prevRules) => {
       const updatedRules = { ...prevRules };
-      if (updatedRules[selectedRule]) {
-        updatedRules[selectedRule] = {
-          ...updatedRules[selectedRule],
-          [id]: field === "value" ? value : updatedRules[selectedRule][id]
-        };
-      }
+      updatedRules[selectedRule] = updatedRules[selectedRule].map((condition) =>
+        condition.id === id ? { ...condition, [field]: value.toUpperCase() } : condition
+      );
       return updatedRules;
     });
   };
@@ -83,7 +126,8 @@ const RuleMapping = () => {
   };
 
   const columns = [
-    { field: "id", headerName: "Condition Name", flex: 1, editable: false },
+    { field: "id", headerName: "ID", flex: 1, editable: false },
+    { field: "name", headerName: "Condition Name", flex: 1, editable: true },
     { field: "value", headerName: "Value", flex: 1, editable: true },
     {
       field: "actions",
@@ -97,18 +141,15 @@ const RuleMapping = () => {
     },
   ];
 
-  const rows = selectedRule && rules[selectedRule]
-    ? Object.entries(rules[selectedRule]).map(([key, value]) => ({ id: key, value }))
-    : [];
-
   return (
     <Box sx={{ p: 3 }}>
       <Typography variant="h4">Rule Mapping</Typography>
-      <FormControl fullWidth sx={{ mt: 2 }}>
-        <InputLabel>Select Rule</InputLabel>
+      <FormControl fullWidth sx={{ mt: 2 }} variant="outlined">
+        <InputLabel shrink>Select Rule</InputLabel>
         <Select
           value={selectedRule}
           onChange={(e) => setSelectedRule(e.target.value)}
+          label="Select Rule"
         >
           {Object.keys(rules).map((rule) => (
             <MenuItem key={rule} value={rule}>{rule}</MenuItem>
@@ -116,14 +157,15 @@ const RuleMapping = () => {
         </Select>
       </FormControl>
       {selectedRule && (
-        <Box sx={{ mt: 2, height: 400 }}>
+        <Box sx={{ mt: 2, height: 400, width: "100%" }}>
           <DataGrid
-            rows={rows}
+            rows={rowData}
             columns={columns}
             pageSize={5}
-            rowsPerPageOptions={[5]}
-            onCellEditCommit={handleEditCellChange}
-            slots={{ toolbar: () => <CustomGridToolbar addCondition={addCondition} /> }}
+            rowsPerPageOptions={[5, 10, 20]}
+            pagination
+            onCellEditCommit={onCellEditCommit}
+            slots={{ toolbar: () => <CustomGridToolbar addCondition={addCondition} handleImport={handleImport} /> }}
           />
         </Box>
       )}
