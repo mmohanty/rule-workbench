@@ -53,6 +53,14 @@ const RuleMapping = () => {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [rowData, setRowData] = useState([]);
 
+  //const [rules, setRules] = useState({});
+//   useEffect(() => {
+//     axios.get("/api/rules")
+//       .then(response => {
+//         setRules(response.data);
+//       })
+//       .catch(error => console.error("Error fetching rules:", error));
+//   }, []);
   useEffect(() => {
     if (selectedRule && rules[selectedRule]) {
       setRowData([...rules[selectedRule]]);

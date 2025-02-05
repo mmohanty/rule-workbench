@@ -12,10 +12,16 @@ import {
   DialogContent,
   DialogActions,
 } from "@mui/material";
-import { DndContext, closestCorners, PointerSensor, useSensor, useSensors, DragOverlay } from "@dnd-kit/core";
+import { DndContext, 
+  closestCorners, 
+  PointerSensor, 
+  useSensor, 
+  useSensors, 
+  DragOverlay } from "@dnd-kit/core";
 import SortableContainer from "./SortableContainer";
 import { initialPool, mockServerData } from "./data";
 import SortableItem from "./SortableItem";
+import { arrayMove } from "@dnd-kit/sortable";
 
 function Rules() {
   const [containers, setContainers] = useState(mockServerData);
@@ -51,30 +57,39 @@ function Rules() {
     let overContainer = selectedKey;
 
     setContainers((prev) => {
-      const updatedContainers = { ...prev };
+        const updatedContainers = { ...prev };
+        
+        // Find the active item in the container
+        const activeIndex = updatedContainers[overContainer].findIndex((item) => item.id === active.id);
+        const overIndex = updatedContainers[overContainer].findIndex((item) => item.id === over.id);
 
-      const activeItem = initialPool.find((item) => item.id === active.id) ||
-        Object.values(prev).flat().find((item) => item.id === active.id);
+        // If the active item exists in the container, reorder it instead of duplicating
+        if (activeIndex !== -1) {
+            updatedContainers[overContainer] = arrayMove(updatedContainers[overContainer], activeIndex, overIndex);
+        } else {
+            const activeItem = initialPool.find((item) => item.id === active.id) ||
+                Object.values(prev).flat().find((item) => item.id === active.id);
 
-      if (!activeItem) return prev;
+            if (!activeItem) return prev;
 
-      // If item requires input, open dialog first
-      if (active.id.startsWith("pool") && activeItem.requiresInput) {
-        setTimeout(() => {
-          setOpenDialogItem({ ...activeItem, id: `copy-${crypto.randomUUID()}`, container: overContainer });
-        }, 100);
-        return prev; // Wait for input before adding
-      }
+            // If item requires input, open dialog before adding
+            if (active.id.startsWith("pool") && activeItem.requiresInput) {
+                setTimeout(() => {
+                    setOpenDialogItem({ ...activeItem, id: `copy-${crypto.randomUUID()}`, container: overContainer });
+                }, 100);
+                return prev; // Wait for user input before adding
+            }
 
-      // Otherwise, add the item directly
-      updatedContainers[overContainer] = [
-        ...(updatedContainers[overContainer] || []),
-        { ...activeItem, id: `copy-${crypto.randomUUID()}` },
-      ];
+            // Otherwise, add the item directly
+            updatedContainers[overContainer] = [
+                ...(updatedContainers[overContainer] || []),
+                { ...activeItem, id: `copy-${crypto.randomUUID()}` },
+            ];
+        }
 
-      return updatedContainers;
+        return updatedContainers;
     });
-  };
+};
 
   const handlePreview = () => {
     const finalData = Object.keys(containers).reduce((result, key) => {
