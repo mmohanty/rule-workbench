@@ -11,6 +11,8 @@ export const menuItems = [
       { label: "T1-JsonEditor", path: "/jsonEditor/T1" },
       { label: "T2-JsonEditor", path: "/jsonEditor/T2" },
       { label: "Rule Mapping", path: "/ruleMapping" },
+      { label: "File Mapping", path: "/fileGridPage" },
+      { label: "File Status", path: "/fileStatus" },
     ],
   },
   {

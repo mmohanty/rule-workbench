@@ -9,3 +9,5 @@ export const Team = () => <Typography variant="h4">👥 Team Page</Typography>;
 export { default as Rules } from "./Rules";
 export { default as JsonEditor } from "./JsonEditor";
 export {default as RuleMapping} from "./RuleMapping";
+export {default as FileGridPage} from "./FileGridPage";
+export {default as FileStatus} from "./FileStatus";

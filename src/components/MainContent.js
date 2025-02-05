@@ -1,6 +1,10 @@
 import React from "react";
 import { Routes, Route } from "react-router-dom";
-import { Home, Profile, Preferences, CompanyInfo, Team, Rules, JsonEditor, RuleMapping } from "../pages";
+import { 
+  Home, Profile, 
+  Preferences, CompanyInfo, 
+  Team, Rules, 
+  JsonEditor, RuleMapping, FileGridPage, FileStatus } from "../pages";
 import { Rule } from "@mui/icons-material";
 
 const MainContent = ({ isDrawerOpen }) => {
@@ -14,7 +18,9 @@ const MainContent = ({ isDrawerOpen }) => {
         <Route path="/team" element={<Team />} />
         <Route path="/rules" element={<Rules />} />
         <Route path="/jsonEditor/:param" element={<JsonEditor />} />
-        <Route path="/ruleMapping/" element={<RuleMapping />} />
+        <Route path="/ruleMapping" element={<RuleMapping />} />
+        <Route path="/fileGridPage" element={<FileGridPage />} />
+        <Route path="/fileStatus" element={<FileStatus />} />
       </Routes>
     </main>
   );
