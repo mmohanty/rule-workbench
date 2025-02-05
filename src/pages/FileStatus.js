@@ -5,6 +5,7 @@ import CloudDownloadIcon from "@mui/icons-material/CloudDownload";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
+import axios from "axios";
 
 const filesList = [
   "Certificate",
@@ -64,6 +65,27 @@ const FileStatus = () => {
       console.error("Download error:", error);
     }
   };
+
+//   const handleUpload = (fileName, event) => {
+//     const file = event.target.files[0];
+//     if (file) {
+//       const reader = new FileReader();
+//       reader.onload = async (e) => {
+//         try {
+//           await uploadFile(fileName, e.target.result);
+//           setFileStatus((prev) => ({ ...prev, [fileName]: "exists" }));
+//         } catch (error) {
+//           console.error("Upload failed for", fileName);
+//         }
+//       };
+//       reader.readAsText(file);
+//     }
+//   };
+
+//   const handleDownload = (fileName) => {
+//     downloadFile(fileName);
+//   };
+
   const handleUpload = (fileName, event) => {
     const file = event.target.files[0];
     if (file) {
