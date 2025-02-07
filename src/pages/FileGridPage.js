@@ -72,6 +72,22 @@ const FileGridPage = () => {
     },
   ];
 
+  const toCamelCase = (str) =>
+    str.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+  
+  const transformData = (data) =>
+    data.map((item) => {
+      const transformedItem = Object.keys(item).reduce((acc, key) => {
+        const newKey = toCamelCase(key);
+        acc[newKey] = item[key]; // Convert key & assign value
+        return acc;
+      }, {});
+  
+      // Ensure MUI DataGrid gets an `id` field (use loan_id as id)
+      transformedItem.id = item.loan_id;
+  
+      return transformedItem;
+    });
   // Function to Load Dummy Data Instead of API Call
   const fetchMockFiles = () => {
     if (!searchQuery.trim()) {
