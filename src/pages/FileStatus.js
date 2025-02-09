@@ -1,17 +1,16 @@
 import React, { useState, useEffect } from "react";
-import { Box, Button, CircularProgress, Typography, Grid } from "@mui/material";
+import { Box, Button, CircularProgress, Typography, Grid, Accordion, AccordionSummary, AccordionDetails } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import CloudDownloadIcon from "@mui/icons-material/CloudDownload";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import axios from "axios";
+import { ExpandMore } from "@mui/icons-material";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import { DataGrid } from "@mui/x-data-grid";
 
-const filesList = [
-  "Certificate",
-  "Driving License",
-  "Municipality Card",
-];
+const filesList = ["Certificate", "Driving License", "Municipality Card"];
 
 const FileStatus = () => {
   const [fileStatus, setFileStatus] = useState({});
@@ -25,7 +24,7 @@ const FileStatus = () => {
     setLoading(true);
     setTimeout(() => {
       const status = {
-        "Certificate": "exists",
+        Certificate: "exists",
         "Driving License": "not_found",
         "Municipality Card": "error",
       };
@@ -33,7 +32,6 @@ const FileStatus = () => {
       setLoading(false);
     }, 1000);
   };
-
 
   const uploadFile = async (fileName, content) => {
     try {
@@ -48,7 +46,7 @@ const FileStatus = () => {
       throw error;
     }
   };
-  
+
   const downloadFile = async (fileName) => {
     try {
       const response = await axios.get(`/api/download?fileName=${fileName}`, {
@@ -66,25 +64,25 @@ const FileStatus = () => {
     }
   };
 
-//   const handleUpload = (fileName, event) => {
-//     const file = event.target.files[0];
-//     if (file) {
-//       const reader = new FileReader();
-//       reader.onload = async (e) => {
-//         try {
-//           await uploadFile(fileName, e.target.result);
-//           setFileStatus((prev) => ({ ...prev, [fileName]: "exists" }));
-//         } catch (error) {
-//           console.error("Upload failed for", fileName);
-//         }
-//       };
-//       reader.readAsText(file);
-//     }
-//   };
+  //   const handleUpload = (fileName, event) => {
+  //     const file = event.target.files[0];
+  //     if (file) {
+  //       const reader = new FileReader();
+  //       reader.onload = async (e) => {
+  //         try {
+  //           await uploadFile(fileName, e.target.result);
+  //           setFileStatus((prev) => ({ ...prev, [fileName]: "exists" }));
+  //         } catch (error) {
+  //           console.error("Upload failed for", fileName);
+  //         }
+  //       };
+  //       reader.readAsText(file);
+  //     }
+  //   };
 
-//   const handleDownload = (fileName) => {
-//     downloadFile(fileName);
-//   };
+  //   const handleDownload = (fileName) => {
+  //     downloadFile(fileName);
+  //   };
 
   const handleUpload = (fileName, event) => {
     const file = event.target.files[0];
@@ -117,9 +115,22 @@ const FileStatus = () => {
       <Typography variant="h5" gutterBottom>
         File Status Tracker
       </Typography>
-      <Grid container sx={{ fontWeight: "bold", borderBottom: "2px solid #000", mb: 2, p: 1, alignItems: "center" }}>
-        <Grid item xs={4} sx={{ textAlign: "left" }}>File Name</Grid>
-        <Grid item xs={4} sx={{ textAlign: "center" }}>Status</Grid>
+      <Grid
+        container
+        sx={{
+          fontWeight: "bold",
+          borderBottom: "2px solid #000",
+          mb: 2,
+          p: 1,
+          alignItems: "center",
+        }}
+      >
+        <Grid item xs={4} sx={{ textAlign: "left" }}>
+          File Name
+        </Grid>
+        <Grid item xs={4} sx={{ textAlign: "center" }}>
+          Status
+        </Grid>
         {/* <Grid item xs={2} sx={{ textAlign: "center" }}>Upload</Grid>
         <Grid item xs={2} sx={{ textAlign: "center" }}>Download</Grid> */}
       </Grid>
@@ -139,7 +150,11 @@ const FileStatus = () => {
             <Typography sx={{ textAlign: "left" }}>{file}</Typography>
           </Grid>
           <Grid item xs={4} sx={{ textAlign: "center" }}>
-            {loading ? <CircularProgress size={20} /> : getStatusIcon(fileStatus[file])}
+            {loading ? (
+              <CircularProgress size={20} />
+            ) : (
+              getStatusIcon(fileStatus[file])
+            )}
           </Grid>
           <Grid item xs={2} sx={{ textAlign: "center" }}>
             <input
@@ -174,6 +189,26 @@ const FileStatus = () => {
           </Grid>
         </Grid>
       ))}
+
+      <Accordion key="file-grid1" sx={{ mt: 2 }}>
+        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+          <Typography variant="h6">Comparison</Typography>
+        </AccordionSummary>
+        <AccordionDetails>
+          <Box sx={{ height: 300 }}>
+            <DataGrid
+              rows={[]}
+              columns={[
+                { field: "id", headerName: "ID", width: 70 },
+                { field: "name", headerName: "Name", width: 130 },
+                { field: "age", headerName: "Age", width: 90 },]}
+              pageSize={5}
+              checkboxSelection
+              getRowId={(row) => row.id}
+            />
+          </Box>
+        </AccordionDetails>
+      </Accordion>
     </Box>
   );
 };
