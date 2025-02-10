@@ -9,15 +9,19 @@ import { ExpandMore, Refresh } from "@mui/icons-material";
 import { DataGrid } from "@mui/x-data-grid";
 import axios from "axios";
 
-const filesList = ["Certificate", "Driving License", "Municipality Card"];
+const filesList = [
+  "Certificate",
+  "Driving License",
+  "Municipality Card"
+];
 
 const fetchFileStatus = async () => {
   return new Promise((resolve) => {
     setTimeout(() => {
       resolve({
-        Certificate: "exists",
-        "Driving License": "not_found",
-        "Municipality Card": "error",
+        Certificate: { status: "exists", createdAt: "2024-02-06", lastUpdated: "2024-02-07", size: "2MB", contentType: "application/pdf" },
+        "Driving License": { status: "not_found", createdAt: "2024-01-20", lastUpdated: "2024-01-22", size: "500KB", contentType: "image/png" },
+        "Municipality Card": { status: "error", createdAt: "2023-12-15", lastUpdated: "2024-01-10", size: "1MB", contentType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" }
       });
     }, 1000);
   });
@@ -36,55 +40,46 @@ const getStatusIcon = (status) => {
   }
 };
 
-const columns = [
-  { field: "name", headerName: "File Name", flex: 1 },
-  { field: "createdAt", headerName: "Date Created", flex: 1 },
-  { field: "lastUpdated", headerName: "Last Updated", flex: 1 },
-  { field: "size", headerName: "Size", flex: 1 },
-  { field: "contentType", headerName: "Type", flex: 1 },
-  {
-    field: "download",
-    headerName: "Action",
-    flex: 1,
-    renderCell: (params) => (
-      <Button
-        variant="outlined"
-        color="secondary"
-        startIcon={<CloudDownloadIcon />}
-        size="small"
-        disabled={params.row.status !== "exists"}
-      >
-        Download
-      </Button>
-    ),
-  },
-];
-
 const FileStatus = () => {
   const [fileStatus, setFileStatus] = useState({});
   const [loading, setLoading] = useState(false);
-  const [gridLoading, setGridLoading] = useState({});
   const [files, setFiles] = useState([]);
 
   const refreshFileStatus = async () => {
     setLoading(true);
     const status = await fetchFileStatus();
     setFileStatus(status);
+    setFiles(Object.keys(status).map((key) => ({ id: key, name: key, ...status[key] })));
     setLoading(false);
-  };
-
-  const refreshGridData = async (gridIndex) => {
-    setGridLoading((prev) => ({ ...prev, [gridIndex]: true }));
-    // Simulate a fetch call (replace with real API call if needed)
-    setTimeout(() => {
-      setFiles([...files]); // Simulating refresh by triggering re-render
-      setGridLoading((prev) => ({ ...prev, [gridIndex]: false }));
-    }, 1000);
   };
 
   useEffect(() => {
     refreshFileStatus();
   }, []);
+
+  const columns = [
+    { field: "name", headerName: "File Name", flex: 1 },
+    { field: "createdAt", headerName: "Date Created", flex: 1 },
+    { field: "lastUpdated", headerName: "Last Updated", flex: 1 },
+    { field: "size", headerName: "Size", flex: 1 },
+    { field: "contentType", headerName: "Type", flex: 1 },
+    {
+      field: "download",
+      headerName: "Action",
+      flex: 1,
+      renderCell: (params) => (
+        <Button
+          variant="outlined"
+          color="secondary"
+          startIcon={<CloudDownloadIcon />}
+          size="small"
+          disabled={params.row.status !== "exists"}
+        >
+          Download
+        </Button>
+      ),
+    },
+  ];
 
   return (
     <Box sx={{ p: 3, maxWidth: 800, mx: "auto" }}>
@@ -95,42 +90,44 @@ const FileStatus = () => {
         </IconButton>
       </Typography>
       {filesList.map((file) => (
-        <Grid
-          container
-          key={file}
-          sx={{ alignItems: "center", mb: 2, p: 2, border: "1px solid #ddd", borderRadius: "8px" }}
-        >
-          <Grid item xs={4}>
-            <Typography sx={{ textAlign: "left" }}>{file}</Typography>
+        <Box key={file} sx={{ mb: 2, p: 2, border: "1px solid #ddd", borderRadius: "8px" }}>
+          <Grid container alignItems="center">
+            <Grid item xs={4}>
+              <Typography sx={{ textAlign: "left" }}>{file}</Typography>
+            </Grid>
+            <Grid item xs={4} sx={{ textAlign: "center" }}>
+              {loading ? <CircularProgress size={20} /> : getStatusIcon(fileStatus[file]?.status)}
+            </Grid>
+            <Grid item xs={2} sx={{ textAlign: "center" }}>
+              <Button variant="contained" color="primary" startIcon={<CloudUploadIcon />} size="small">
+                Upload
+              </Button>
+            </Grid>
+            <Grid item xs={2} sx={{ textAlign: "center" }}>
+              <Button
+                variant="outlined"
+                color="secondary"
+                startIcon={<CloudDownloadIcon />}
+                size="small"
+                disabled={fileStatus[file]?.status !== "exists"}
+              >
+                Download
+              </Button>
+            </Grid>
           </Grid>
-          <Grid item xs={4} sx={{ textAlign: "center" }}>
-            {loading ? <CircularProgress size={20} /> : getStatusIcon(fileStatus[file])}
+          <Grid container sx={{ mt: 1 }}>
+            <Grid item xs={12}>
+              <Typography variant="caption" sx={{ color: "gray" }}>
+                Created: {fileStatus[file]?.createdAt} | Last Updated: {fileStatus[file]?.lastUpdated} | Size: {fileStatus[file]?.size} | Type: {fileStatus[file]?.contentType}
+              </Typography>
+            </Grid>
           </Grid>
-          <Grid item xs={2} sx={{ textAlign: "center" }}>
-            <Button variant="contained" color="primary" startIcon={<CloudUploadIcon />} size="small">
-              Upload
-            </Button>
-          </Grid>
-          <Grid item xs={2} sx={{ textAlign: "center" }}>
-            <Button
-              variant="outlined"
-              color="secondary"
-              startIcon={<CloudDownloadIcon />}
-              size="small"
-              disabled={fileStatus[file] !== "exists"}
-            >
-              Download
-            </Button>
-          </Grid>
-        </Grid>
+        </Box>
       ))}
       {["File Details Grid 1", "File Details Grid 2"].map((title, index) => (
         <Accordion key={index} sx={{ mt: 2 }}>
-          <AccordionSummary expandIcon={<ExpandMore />} sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <AccordionSummary expandIcon={<ExpandMore />}>
             <Typography variant="h6">{title}</Typography>
-            <IconButton onClick={() => refreshGridData(index)} color="primary" sx={{ marginLeft: "auto" }}>
-              {gridLoading[index] ? <CircularProgress size={20} /> : <Refresh />}
-            </IconButton>
           </AccordionSummary>
           <AccordionDetails>
             <Box sx={{ height: 300 }}>
