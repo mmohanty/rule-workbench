@@ -44,6 +44,8 @@ const FileStatus = () => {
   const [fileStatus, setFileStatus] = useState({});
   const [loading, setLoading] = useState(false);
   const [files, setFiles] = useState([]);
+  const [expandedAccordion, setExpandedAccordion] = useState(null);
+  const [gridLoading, setGridLoading] = useState({});
 
   const refreshFileStatus = async () => {
     setLoading(true);
@@ -53,9 +55,22 @@ const FileStatus = () => {
     setLoading(false);
   };
 
+  const refreshGrid = async (index, event) => {
+    event.stopPropagation();
+    setGridLoading((prev) => ({ ...prev, [index]: true }));
+    setTimeout(() => {
+      setFiles([...files]); // Simulating a refresh
+      setGridLoading((prev) => ({ ...prev, [index]: false }));
+    }, 1000);
+  };
+
   useEffect(() => {
     refreshFileStatus();
   }, []);
+
+  const handleAccordionChange = (panel) => (event, isExpanded) => {
+    setExpandedAccordion(isExpanded ? panel : expandedAccordion);
+  };
 
   const columns = [
     { field: "name", headerName: "File Name", flex: 1 },
@@ -115,19 +130,15 @@ const FileStatus = () => {
               </Button>
             </Grid>
           </Grid>
-          <Grid container sx={{ mt: 1 }}>
-            <Grid item xs={12}>
-              <Typography variant="caption" sx={{ color: "gray" }}>
-                Created: {fileStatus[file]?.createdAt} | Last Updated: {fileStatus[file]?.lastUpdated} | Size: {fileStatus[file]?.size} | Type: {fileStatus[file]?.contentType}
-              </Typography>
-            </Grid>
-          </Grid>
         </Box>
       ))}
       {["File Details Grid 1", "File Details Grid 2"].map((title, index) => (
-        <Accordion key={index} sx={{ mt: 2 }}>
+        <Accordion key={index} sx={{ mt: 2 }} expanded={expandedAccordion === index} onChange={handleAccordionChange(index)}>
           <AccordionSummary expandIcon={<ExpandMore />}>
             <Typography variant="h6">{title}</Typography>
+            <IconButton onClick={(event) => refreshGrid(index, event)} color="primary" sx={{ marginLeft: "auto" }}>
+              {gridLoading[index] ? <CircularProgress size={20} /> : <Refresh />}
+            </IconButton>
           </AccordionSummary>
           <AccordionDetails>
             <Box sx={{ height: 300 }}>
