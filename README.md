@@ -68,3 +68,62 @@ This section has moved here: [https://facebook.github.io/create-react-app/docs/d
 ### `npm run build` fails to minify
 
 This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+
+
+
+# Deploy to PCF
+
+npm run build
+
+# Create Staticfile
+
+touch build/Staticfile
+
+# Create manifest.yml
+
+cf push
+Upload the build/ directory
+Assign a random route (you can check with cf apps)
+
+# (Optional) Custom Domain
+To set a custom route, map a hostname to your app:
+cf map-route my-react-app your-pcf-domain.com --hostname my-app
+
+# Verification
+cf apps
+
+# Updating the App
+When you make changes to your React code:
+
+1. Run 
+npm run build again.
+
+2. Push updates with:
+cf push
+
+
+### Python code
+2. Create requirements.txt
+pip freeze > requirements.txt
+
+3. Create a Procfile
+In the root directory, create a Procfile:
+
+web: uvicorn app:app --host 0.0.0.0 --port $PORT
+
+
+4. Create manifest.yml
+Create a manifest.yml file:
+
+``
+applications:
+  - name: my-fastapi-app
+    memory: 256M
+    instances: 1
+    buildpacks:
+      - python_buildpack
+    command: uvicorn app:app --host 0.0.0.0 --port $PORT
+
+``
+
+

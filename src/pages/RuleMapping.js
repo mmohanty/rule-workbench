@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import axios from "axios";
 import {
   Box,
   Button,
@@ -12,58 +13,47 @@ import {
   MenuItem,
   InputLabel,
   FormControl,
-  TextField,
 } from "@mui/material";
 import { Add, Delete, UploadFile } from "@mui/icons-material";
 import { DataGrid, GridToolbarContainer, GridToolbar } from "@mui/x-data-grid";
 
 const CustomGridToolbar = ({ addCondition, handleImport }) => (
-    <GridToolbarContainer sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
-      <input
-        accept="application/json"
-        style={{ display: 'none' }}
-        id="import-json"
-        type="file"
-        onChange={handleImport}
-      />
-      <label htmlFor="import-json">
-        <IconButton color="primary" component="span">
-          <UploadFile />
-        </IconButton>
-      </label>
-      <IconButton onClick={addCondition} color="primary">
-        <Add />
+  <GridToolbarContainer sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+    <input
+      accept="application/json"
+      style={{ display: 'none' }}
+      id="import-json"
+      type="file"
+      onChange={handleImport}
+    />
+    <label htmlFor="import-json">
+      <IconButton color="primary" component="span">
+        <UploadFile />
       </IconButton>
-    </GridToolbarContainer>
-  );
-  
-  
+    </label>
+    <IconButton onClick={addCondition} color="primary">
+      <Add />
+    </IconButton>
+  </GridToolbarContainer>
+);
 
 const RuleMapping = () => {
   const [rules, setRules] = useState({
     "RULE1": [
-      { id: "1", name: "Key1", value: "Value1" },
-      { id: "2", name: "Key2", value: "Value2" }
+      { id: "1", name: "CONDITION1", value: "VALUE1" },
+      { id: "2", name: "CONDITION2", value: "VALUE2" }
     ],
     "RULE2": [
-      { id: "3", name: "Key3", value: "Value3" }
+      { id: "3", name: "CONDITION3", value: "VALUE3" }
     ]
   });
   const [selectedRule, setSelectedRule] = useState("");
   const [previewOpen, setPreviewOpen] = useState(false);
   const [rowData, setRowData] = useState([]);
 
-  //const [rules, setRules] = useState({});
-//   useEffect(() => {
-//     axios.get("/api/rules")
-//       .then(response => {
-//         setRules(response.data);
-//       })
-//       .catch(error => console.error("Error fetching rules:", error));
-//   }, []);
   useEffect(() => {
     if (selectedRule && rules[selectedRule]) {
-      setRowData([...rules[selectedRule]]);
+      setRowData(rules[selectedRule]);
     } else {
       setRowData([]);
     }
@@ -89,13 +79,15 @@ const RuleMapping = () => {
     if (!selectedRule) return;
     
     const newId = (rowData.length + 1 + Math.max(...rowData.map(c => parseInt(c.id, 10) || 0), 0)).toString();
-    const newCondition = { id: newId, name: `KEY${newId}`, value: "" };
+    const newCondition = { id: newId, name: `CONDITION${newId}`, value: `VALUE${newId}` };
 
     setRules((prevRules) => {
       const updatedRules = { ...prevRules };
       updatedRules[selectedRule] = [...updatedRules[selectedRule], newCondition];
       return updatedRules;
     });
+
+    setRowData((prevData) => [...prevData, newCondition]);
   };
 
   const deleteCondition = (conditionId) => {
@@ -106,19 +98,26 @@ const RuleMapping = () => {
       updatedRules[selectedRule] = updatedRules[selectedRule].filter((condition) => condition.id !== conditionId);
       return updatedRules;
     });
+
+    setRowData((prevData) => prevData.filter((row) => row.id !== conditionId));
   };
 
   const onCellEditCommit = (params) => {
     const { id, field, value } = params;
     if (!selectedRule) return;
     
+    const updatedValue = value.toUpperCase();
     setRules((prevRules) => {
       const updatedRules = { ...prevRules };
       updatedRules[selectedRule] = updatedRules[selectedRule].map((condition) =>
-        condition.id === id ? { ...condition, [field]: value.toUpperCase() } : condition
+        condition.id === id ? { ...condition, [field]: updatedValue } : condition
       );
       return updatedRules;
     });
+
+    setRowData((prevData) => prevData.map((row) =>
+      row.id === id ? { ...row, [field]: updatedValue } : row
+    ));
   };
 
   const handlePreview = () => {
@@ -187,15 +186,6 @@ const RuleMapping = () => {
           </Button>
         </Box>
       )}
-      <Dialog open={previewOpen} onClose={handleClosePreview} maxWidth="sm" fullWidth>
-        <DialogTitle>Preview Data</DialogTitle>
-        <DialogContent>
-          <pre>{JSON.stringify(rules, null, 2)}</pre>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleClosePreview} variant="contained">Close</Button>
-        </DialogActions>
-      </Dialog>
     </Box>
   );
 };

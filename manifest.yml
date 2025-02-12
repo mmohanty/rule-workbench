@@ -1,0 +1,6 @@
+applications:
+  - name: my-react-app
+    memory: 256M
+    buildpacks:
+      - staticfile_buildpack
+    path: build
