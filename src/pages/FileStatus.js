@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Box, Button, CircularProgress, Typography, Grid, Accordion, AccordionSummary, AccordionDetails, IconButton } from "@mui/material";
+import { Box, Button, CircularProgress, Typography, Grid, Accordion, AccordionSummary, AccordionDetails, IconButton, Input } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import CloudDownloadIcon from "@mui/icons-material/CloudDownload";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
@@ -47,21 +47,20 @@ const FileStatus = () => {
   const [expandedAccordion, setExpandedAccordion] = useState(null);
   const [gridLoading, setGridLoading] = useState({});
 
+  const handleFileUpload = (event, fileName) => {
+    const file = event.target.files[0];
+    if (file) {
+      console.log(`Uploading ${file.name} for ${fileName}`);
+      // Add actual upload logic here
+    }
+  };
+
   const refreshFileStatus = async () => {
     setLoading(true);
     const status = await fetchFileStatus();
     setFileStatus(status);
     setFiles(Object.keys(status).map((key) => ({ id: key, name: key, ...status[key] })));
     setLoading(false);
-  };
-
-  const refreshGrid = async (index, event) => {
-    event.stopPropagation();
-    setGridLoading((prev) => ({ ...prev, [index]: true }));
-    setTimeout(() => {
-      setFiles([...files]); // Simulating a refresh
-      setGridLoading((prev) => ({ ...prev, [index]: false }));
-    }, 1000);
   };
 
   useEffect(() => {
@@ -71,30 +70,6 @@ const FileStatus = () => {
   const handleAccordionChange = (panel) => (event, isExpanded) => {
     setExpandedAccordion(isExpanded ? panel : expandedAccordion);
   };
-
-  const columns = [
-    { field: "name", headerName: "File Name", flex: 1 },
-    { field: "createdAt", headerName: "Date Created", flex: 1 },
-    { field: "lastUpdated", headerName: "Last Updated", flex: 1 },
-    { field: "size", headerName: "Size", flex: 1 },
-    { field: "contentType", headerName: "Type", flex: 1 },
-    {
-      field: "download",
-      headerName: "Action",
-      flex: 1,
-      renderCell: (params) => (
-        <Button
-          variant="outlined"
-          color="secondary"
-          startIcon={<CloudDownloadIcon />}
-          size="small"
-          disabled={params.row.status !== "exists"}
-        >
-          Download
-        </Button>
-      ),
-    },
-  ];
 
   return (
     <Box sx={{ p: 3, maxWidth: 800, mx: "auto" }}>
@@ -114,9 +89,18 @@ const FileStatus = () => {
               {loading ? <CircularProgress size={20} /> : getStatusIcon(fileStatus[file]?.status)}
             </Grid>
             <Grid item xs={2} sx={{ textAlign: "center" }}>
-              <Button variant="contained" color="primary" startIcon={<CloudUploadIcon />} size="small">
-                Upload
-              </Button>
+              <input
+                accept="*"
+                style={{ display: "none" }}
+                id={`upload-button-${file}`}
+                type="file"
+                onChange={(event) => handleFileUpload(event, file)}
+              />
+              <label htmlFor={`upload-button-${file}`}>
+                <Button component="span" variant="contained" color="primary" startIcon={<CloudUploadIcon />} size="small">
+                  Upload
+                </Button>
+              </label>
             </Grid>
             <Grid item xs={2} sx={{ textAlign: "center" }}>
               <Button
@@ -131,21 +115,6 @@ const FileStatus = () => {
             </Grid>
           </Grid>
         </Box>
-      ))}
-      {["File Details Grid 1", "File Details Grid 2"].map((title, index) => (
-        <Accordion key={index} sx={{ mt: 2 }} expanded={expandedAccordion === index} onChange={handleAccordionChange(index)}>
-          <AccordionSummary expandIcon={<ExpandMore />}>
-            <Typography variant="h6">{title}</Typography>
-            <IconButton onClick={(event) => refreshGrid(index, event)} color="primary" sx={{ marginLeft: "auto" }}>
-              {gridLoading[index] ? <CircularProgress size={20} /> : <Refresh />}
-            </IconButton>
-          </AccordionSummary>
-          <AccordionDetails>
-            <Box sx={{ height: 300 }}>
-              <DataGrid rows={files} columns={columns} pageSize={5} checkboxSelection getRowId={(row) => row.id} />
-            </Box>
-          </AccordionDetails>
-        </Accordion>
       ))}
     </Box>
   );
