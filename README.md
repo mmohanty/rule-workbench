@@ -126,4 +126,14 @@ applications:
 
 ``
 
+Replace my-fastapi-app with your desired app name.
+python_buildpack ensures PCF uses Python.
+
+Login to PCF
+
+ Deploy to PCF
+ cf push
+
+ 
+
 
