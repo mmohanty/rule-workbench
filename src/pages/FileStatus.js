@@ -23,10 +23,19 @@ const fetchFileStatus = async () => {
 const fetchTabFiles = async (tab) => {
   return new Promise((resolve) => {
     setTimeout(() => {
-      resolve([
-        { id: `${tab}-1`, name: `${tab} File 1`, status: "exists", size: "1MB", contentType: "application/pdf", lastUpdated: "2024-02-10" },
-        { id: `${tab}-2`, name: `${tab} File 2`, status: "not_found", size: "500KB", contentType: "image/png", lastUpdated: "2024-02-12" }
-      ]);
+      const responseData = {
+        "Document1.pdf": { status: "exists", lastUpdated: "2024-02-10", size: "1MB", contentType: "application/pdf" },
+        "Image1.png": { status: "not_found", lastUpdated: "2024-02-12", size: "500KB", contentType: "image/png" }
+      };
+
+      // Convert object data into array format
+      const formattedData = Object.entries(responseData).map(([key, value], index) => ({
+        id: `${tab}-${index + 1}`,
+        name: key,
+        ...value
+      }));
+
+      resolve(formattedData);
     }, 1000);
   });
 };
