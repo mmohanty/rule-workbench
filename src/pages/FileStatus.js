@@ -1,28 +1,32 @@
 import React, { useState, useEffect } from "react";
-import { Box, Button, CircularProgress, Typography, Grid, Accordion, AccordionSummary, AccordionDetails, IconButton, Input } from "@mui/material";
+import { Box, IconButton, Tabs, Tab, CircularProgress, Typography, Grid } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import CloudDownloadIcon from "@mui/icons-material/CloudDownload";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
-import { ExpandMore, Refresh } from "@mui/icons-material";
+import { Refresh } from "@mui/icons-material";
 import { DataGrid } from "@mui/x-data-grid";
-import axios from "axios";
 
-const filesList = [
-  "Certificate",
-  "Driving License",
-  "Municipality Card"
-];
+const tabs = ["T3", "T4", "T5", "T6", "T7", "T8"];
 
 const fetchFileStatus = async () => {
   return new Promise((resolve) => {
     setTimeout(() => {
       resolve({
-        Certificate: { status: "exists", createdAt: "2024-02-06", lastUpdated: "2024-02-07", size: "2MB", contentType: "application/pdf" },
-        "Driving License": { status: "not_found", createdAt: "2024-01-20", lastUpdated: "2024-01-22", size: "500KB", contentType: "image/png" },
-        "Municipality Card": { status: "error", createdAt: "2023-12-15", lastUpdated: "2024-01-10", size: "1MB", contentType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" }
+        Certificate: { status: "exists", createdAt: "2024-02-06", lastUpdated: "2024-02-07", size: "2MB", contentType: "application/pdf" }
       });
+    }, 1000);
+  });
+};
+
+const fetchTabFiles = async (tab) => {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve([
+        { id: `${tab}-1`, name: `${tab} File 1`, status: "exists", size: "1MB", contentType: "application/pdf", lastUpdated: "2024-02-10" },
+        { id: `${tab}-2`, name: `${tab} File 2`, status: "not_found", size: "500KB", contentType: "image/png", lastUpdated: "2024-02-12" }
+      ]);
     }, 1000);
   });
 };
@@ -43,79 +47,109 @@ const getStatusIcon = (status) => {
 const FileStatus = () => {
   const [fileStatus, setFileStatus] = useState({});
   const [loading, setLoading] = useState(false);
-  const [files, setFiles] = useState([]);
-  const [expandedAccordion, setExpandedAccordion] = useState(null);
-  const [gridLoading, setGridLoading] = useState({});
-
-  const handleFileUpload = (event, fileName) => {
-    const file = event.target.files[0];
-    if (file) {
-      console.log(`Uploading ${file.name} for ${fileName}`);
-      // Add actual upload logic here
-    }
-  };
+  const [selectedTab, setSelectedTab] = useState("T3");
+  const [tabFiles, setTabFiles] = useState([]);
+  const [tabLoading, setTabLoading] = useState(false);
 
   const refreshFileStatus = async () => {
     setLoading(true);
     const status = await fetchFileStatus();
     setFileStatus(status);
-    setFiles(Object.keys(status).map((key) => ({ id: key, name: key, ...status[key] })));
     setLoading(false);
+  };
+
+  const refreshTabFiles = async (tab) => {
+    setTabLoading(true);
+    const files = await fetchTabFiles(tab);
+    setTabFiles(files);
+    setTabLoading(false);
   };
 
   useEffect(() => {
     refreshFileStatus();
   }, []);
 
-  const handleAccordionChange = (panel) => (event, isExpanded) => {
-    setExpandedAccordion(isExpanded ? panel : expandedAccordion);
-  };
+  useEffect(() => {
+    refreshTabFiles(selectedTab);
+  }, [selectedTab]);
 
   return (
-    <Box sx={{ p: 3, maxWidth: 800, mx: "auto" }}>
+    <Box sx={{ p: 3, maxWidth: 900, mx: "auto" }}>
       <Typography variant="h5" gutterBottom display="flex" justifyContent="space-between" alignItems="center">
         File Status Tracker
         <IconButton onClick={refreshFileStatus} color="primary">
           <Refresh />
         </IconButton>
       </Typography>
-      {filesList.map((file) => (
-        <Box key={file} sx={{ mb: 2, p: 2, border: "1px solid #ddd", borderRadius: "8px" }}>
-          <Grid container alignItems="center">
-            <Grid item xs={4}>
-              <Typography sx={{ textAlign: "left" }}>{file}</Typography>
-            </Grid>
-            <Grid item xs={4} sx={{ textAlign: "center" }}>
-              {loading ? <CircularProgress size={20} /> : getStatusIcon(fileStatus[file]?.status)}
-            </Grid>
-            <Grid item xs={2} sx={{ textAlign: "center" }}>
-              <input
-                accept="*"
-                style={{ display: "none" }}
-                id={`upload-button-${file}`}
-                type="file"
-                onChange={(event) => handleFileUpload(event, file)}
-              />
-              <label htmlFor={`upload-button-${file}`}>
-                <Button component="span" variant="contained" color="primary" startIcon={<CloudUploadIcon />} size="small">
-                  Upload
-                </Button>
-              </label>
-            </Grid>
-            <Grid item xs={2} sx={{ textAlign: "center" }}>
-              <Button
-                variant="outlined"
-                color="secondary"
-                startIcon={<CloudDownloadIcon />}
-                size="small"
-                disabled={fileStatus[file]?.status !== "exists"}
-              >
-                Download
-              </Button>
-            </Grid>
+      <Box sx={{ mb: 2, p: 2, border: "1px solid #ddd", borderRadius: "8px" }}>
+        <Grid container alignItems="center" spacing={2}>
+          <Grid item xs={4}>
+            <Typography sx={{ textAlign: "left" }}>Certificate</Typography>
           </Grid>
-        </Box>
-      ))}
+          <Grid item xs={4} sx={{ textAlign: "center" }}>
+            {loading ? <CircularProgress size={20} /> : getStatusIcon(fileStatus.Certificate?.status)}
+          </Grid>
+          <Grid item xs={2} sx={{ textAlign: "center" }}>
+            <IconButton color="primary">
+              <CloudUploadIcon />
+            </IconButton>
+          </Grid>
+          <Grid item xs={2} sx={{ textAlign: "center" }}>
+            <IconButton color="secondary" disabled={fileStatus.Certificate?.status !== "exists"}>
+              <CloudDownloadIcon />
+            </IconButton>
+          </Grid>
+        </Grid>
+        <Typography variant="caption" sx={{ color: "gray", display: "block", mt: 1 }}>
+          <strong>Created:</strong> {fileStatus.Certificate?.createdAt} | <strong>Last Updated:</strong> {fileStatus.Certificate?.lastUpdated} | <strong>Size:</strong> {fileStatus.Certificate?.size} | <strong>Type:</strong> {fileStatus.Certificate?.contentType}
+        </Typography>
+      </Box>
+      <Tabs
+        value={selectedTab}
+        onChange={(event, newValue) => setSelectedTab(newValue)}
+        sx={{ borderBottom: 1, borderColor: "divider", mb: 2, 
+              '& .MuiTab-root': { borderRadius: '5px', px: 3, py: 1, fontWeight: 'bold', fontSize: '1rem',
+              '&.Mui-selected': { backgroundColor: '#EDE7F6', color: '#4A148C', borderRadius: '8px' } } }}
+      >
+        {tabs.map((tab) => (
+          <Tab key={tab} label={tab} value={tab} />
+        ))}
+        <IconButton onClick={() => refreshTabFiles(selectedTab)} color="primary">
+          {tabLoading ? <CircularProgress size={20} /> : <Refresh />}
+        </IconButton>
+      </Tabs>
+      <Box sx={{ mt: 2 }}>
+        <Typography variant="h6" gutterBottom>
+          {selectedTab} Files
+        </Typography>
+        <DataGrid rows={tabFiles} columns={[
+          { field: "name", headerName: "File Name", flex: 2 },
+          { field: "size", headerName: "Size", flex: 1 },
+          { field: "contentType", headerName: "Type", flex: 1 },
+          { field: "lastUpdated", headerName: "Last Updated", flex: 1 },
+          { field: "status", headerName: "Status", flex: 1, renderCell: (params) => getStatusIcon(params.value) },
+          {
+            field: "upload",
+            headerName: "Upload",
+            flex: 1,
+            renderCell: () => (
+              <IconButton color="primary">
+                <CloudUploadIcon />
+              </IconButton>
+            )
+          },
+          {
+            field: "download",
+            headerName: "Download",
+            flex: 1,
+            renderCell: (params) => (
+              <IconButton color="secondary" disabled={params.row.status !== "exists"}>
+                <CloudDownloadIcon />
+              </IconButton>
+            )
+          }
+        ]} pageSize={5} autoHeight />
+      </Box>
     </Box>
   );
 };

@@ -172,7 +172,8 @@ const RuleMapping = () => {
             rowsPerPageOptions={[5, 10, 20]}
             pagination
             onCellEditCommit={onCellEditCommit}
-            slots={{ toolbar: () => <CustomGridToolbar addCondition={addCondition} handleImport={handleImport} /> }}
+            slots={{ toolbar: CustomGridToolbar }}
+            //slots={{ toolbar: () => <CustomGridToolbar addCondition={addCondition} handleImport={handleImport} /> }}
           />
         </Box>
       )}
